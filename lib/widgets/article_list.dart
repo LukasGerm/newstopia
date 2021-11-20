@@ -25,13 +25,38 @@ class _ArticleListState extends State<ArticleList> {
     articleResponseFuture = ArticleAdapter.fetchArticles();
   }
 
+  Future<void> _refreshArticle() async {
+    Future<ArticleResponse> freshArticleResponseFuture =
+        ArticleAdapter.fetchArticles();
+    setState(() {
+      articleResponseFuture = freshArticleResponseFuture;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<ArticleResponse>(
         future: articleResponseFuture,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            return ArticleListContent(articleResponse: snapshot.data!);
+            return Expanded(
+              child: RefreshIndicator(
+                  child: ListView.separated(
+                    scrollDirection: Axis.vertical,
+                    padding: const EdgeInsets.all(20),
+                    shrinkWrap: true,
+                    itemCount: snapshot.data!.articles.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ArticleTile(
+                          article: snapshot.data!.articles[index]);
+                    },
+                    separatorBuilder: (BuildContext context, int index) =>
+                        const Divider(
+                      height: 40,
+                    ),
+                  ),
+                  onRefresh: _refreshArticle),
+            );
           } else if (snapshot.hasError) {
             return Text('${snapshot.error}');
           }
@@ -39,30 +64,5 @@ class _ArticleListState extends State<ArticleList> {
           // By default, show a loading spinner.
           return const CircularProgressIndicator();
         });
-  }
-}
-
-/// Shows the articles
-class ArticleListContent extends StatelessWidget {
-  final ArticleResponse articleResponse;
-
-  const ArticleListContent({Key? key, required this.articleResponse})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-        child: ListView.separated(
-      scrollDirection: Axis.vertical,
-      padding: const EdgeInsets.all(20),
-      shrinkWrap: true,
-      itemCount: articleResponse.articles.length,
-      itemBuilder: (BuildContext context, int index) {
-        return ArticleTile(article: articleResponse.articles[index]);
-      },
-      separatorBuilder: (BuildContext context, int index) => const Divider(
-        height: 40,
-      ),
-    ));
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:newstopia/types/article.dart';
 
 /**
@@ -37,7 +38,13 @@ class ArticleContent extends StatelessWidget {
           Row(children: [
             Flexible(
               child: Container(
-                  child: Text("By " + article.author!,
+                  child: Text(
+                      "By " +
+                          article.author! +
+                          " at " +
+                          DateFormat("dd.MM.yyyy - kk:mm")
+                              .format(article.publishedAt)
+                              .toString(),
                       style: Theme.of(context).textTheme.caption),
                   padding:
                       const EdgeInsets.only(left: 12, right: 12, bottom: 20)),

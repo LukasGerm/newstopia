@@ -8,9 +8,11 @@ import 'package:newstopia/types/config.dart';
 class ArticleAdapter {
   static Future<ArticleResponse> fetchArticles() async {
     Config config = await Config.loadConfig();
+
     final response = await http.get(Uri.parse(config.newsApiUrl +
         "?limit=100&languages=en&access_key=" +
-        config.apiKey));
+        config.apiKey +
+        "&sort=published_desc"));
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
