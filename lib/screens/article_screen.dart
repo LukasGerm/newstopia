@@ -13,7 +13,7 @@ class ArticleScreen extends StatelessWidget {
     final article = ModalRoute.of(context)!.settings.arguments as Article;
 
     return Scaffold(
-      appBar: const CustomAppbar(title: "title2"),
+      appBar: CustomAppbar(title: article.title),
       body: Column(
         children: [
           ArticleContent(

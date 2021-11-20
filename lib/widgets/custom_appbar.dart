@@ -17,7 +17,8 @@ class CustomAppbar extends StatelessWidget with PreferredSizeWidget {
     return AppBar(
       title: Text(
         title,
-        style: const TextStyle(color: Colors.black),
+        style: const TextStyle(
+            color: Colors.black, overflow: TextOverflow.ellipsis),
       ),
       backgroundColor: Colors.transparent,
       iconTheme: const IconThemeData(color: Colors.black),

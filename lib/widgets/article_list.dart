@@ -15,54 +15,73 @@ class ArticleList extends StatefulWidget {
 }
 
 class _ArticleListState extends State<ArticleList> {
-  late Future<ArticleResponse> articleResponseFuture;
-
+  ArticleResponse? articleResponse;
+  late bool isLoading = false;
+  final int loadingThreshold = 5;
+  int offset = 0;
   @override
   void initState() {
     super.initState();
+    isLoading = true;
 
     /// fetch all articles
-    articleResponseFuture = ArticleAdapter.fetchArticles();
+    ArticleAdapter.fetchArticles().then((value) {
+      setState(() {
+        isLoading = false;
+        articleResponse = value;
+        offset = ArticleAdapter.limit;
+      });
+    });
   }
 
   Future<void> _refreshArticle() async {
-    Future<ArticleResponse> freshArticleResponseFuture =
-        ArticleAdapter.fetchArticles();
+    ArticleResponse freshArticleResponse = await ArticleAdapter.fetchArticles();
     setState(() {
-      articleResponseFuture = freshArticleResponseFuture;
+      articleResponse = freshArticleResponse;
+    });
+  }
+
+  /// Loads new
+  _loadAdditionalArticles() async {
+    ArticleResponse additionalArticleResponse =
+        await ArticleAdapter.fetchArticles(offset);
+    ArticleResponse mergedArticleResponse = articleResponse!;
+
+    mergedArticleResponse.articles.addAll(additionalArticleResponse.articles);
+
+    setState(() {
+      offset = offset + ArticleAdapter.limit;
+      articleResponse = mergedArticleResponse;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<ArticleResponse>(
-        future: articleResponseFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return Expanded(
-              child: RefreshIndicator(
-                  child: ListView.separated(
-                    scrollDirection: Axis.vertical,
-                    padding: const EdgeInsets.all(20),
-                    shrinkWrap: true,
-                    itemCount: snapshot.data!.articles.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      return ArticleTile(
-                          article: snapshot.data!.articles[index]);
-                    },
-                    separatorBuilder: (BuildContext context, int index) =>
-                        const Divider(
-                      height: 40,
-                    ),
-                  ),
-                  onRefresh: _refreshArticle),
-            );
-          } else if (snapshot.hasError) {
-            return Text('${snapshot.error}');
-          }
-
-          // By default, show a loading spinner.
-          return const CircularProgressIndicator();
-        });
+    if (isLoading || articleResponse == null) {
+      // By default, show a loading spinner.
+      return const CircularProgressIndicator();
+    }
+    return Expanded(
+      child: RefreshIndicator(
+          child: ListView.separated(
+            scrollDirection: Axis.vertical,
+            padding: const EdgeInsets.all(20),
+            shrinkWrap: true,
+            itemCount: articleResponse!.articles.length,
+            itemBuilder: (BuildContext context, int index) {
+              if (index ==
+                  articleResponse!.articles.length - loadingThreshold) {
+                // load new articles
+                _loadAdditionalArticles();
+              }
+              return ArticleTile(article: articleResponse!.articles[index]);
+            },
+            separatorBuilder: (BuildContext context, int index) =>
+                const Divider(
+              height: 40,
+            ),
+          ),
+          onRefresh: _refreshArticle),
+    );
   }
 }

@@ -6,13 +6,17 @@ import 'package:newstopia/types/config.dart';
 
 /// Adapter to access the news api
 class ArticleAdapter {
-  static Future<ArticleResponse> fetchArticles() async {
+  static int limit = 50;
+  static Future<ArticleResponse> fetchArticles([int offset = 0]) async {
     Config config = await Config.loadConfig();
 
     final response = await http.get(Uri.parse(config.newsApiUrl +
-        "?limit=100&languages=en&access_key=" +
+        "?limit=" +
+        limit.toString() +
+        "&languages=en&country=de&access_key=" +
         config.apiKey +
-        "&sort=published_desc"));
+        "&sort=published_desc&offset=" +
+        offset.toString()));
 
     if (response.statusCode == 200) {
       // If the server did return a 200 OK response,
@@ -28,7 +32,7 @@ class ArticleAdapter {
     } else {
       // If the server did not return a 200 OK response,
       // then throw an exception.
-      throw Exception('Failed to load album');
+      throw Exception("failed to load response");
     }
   }
 }
